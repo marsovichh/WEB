@@ -18,7 +18,7 @@
 | number | string | | человеческий номер (ATM-2026-001) |
 | model | string | | модель устройства |
 | address | string | | адрес установки |
-| status | enum | | New / InProgress / Closed / Cancelled |
+| status | enum | | Active / Maintenance / Offline / Decommissioned |
 | zoneId | int | FK → ServiceZone.id | участок обслуживания |
 | createdAt | datetime | | дата регистрации |
 
@@ -61,6 +61,6 @@
 - Один User (инженер) может быть назначен на много ServiceRequest (1:N).
 - У новой заявки исполнитель может отсутствовать (assigneeUserId = NULL).
 
-## ER-диаграмма (текстом)
+## ER-диаграмма
 <img width="1807" height="870" alt="ChatGPT Image 26 сент  2026 г , 12_24_13" src="https://github.com/user-attachments/assets/e1900c33-57e8-4e21-942c-867323c422d2" />
 
