@@ -1,10 +1,21 @@
 # Архитектура
 
 ## Схема
-Vue 3 + Vite ASP.NET Core PostgreSQL
-localhost:5173 ───────► localhost:5000 ───────► обычно :5432
-HTTP запросы к БД
-POST /api/atms
+
+```mermaid
+flowchart LR
+
+    VUE["Vue 3 + Vite<br/>localhost:5173<br/><br/>Реестр банкоматов<br/>Заявки на обслуживание<br/>Графики ТО"]
+
+    API["ASP.NET Core Web API<br/>localhost:5000<br/><br/>REST API<br/>Бизнес-правила<br/>Валидация<br/>Права ролей<br/>Назначение инженеров"]
+
+    DB[("PostgreSQL<br/>localhost:5432<br/><br/>Atm<br/>ServiceRequest<br/>ServiceZone<br/>User")]
+
+    VUE -->|"HTTP / REST<br/>POST /api/atms<br/>POST /api/tickets<br/>GET /api/atms"| API
+
+    API -->|"Entity Framework Core / Npgsql<br/>SQL"| DB
+```
+
 ## Подпись
 
 архитектура web-ИС семестра
