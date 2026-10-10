@@ -2,3 +2,15 @@
 # ФИО: Хабибуллин Ильназ Марсович
 # Группа: ТРИС-3-23
 # Стек: Vue 3 + ASP.NET Core + PostgreSQL
+
+## Запуск клиента
+
+Нужен Node.js LTS.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Открыть адрес, который напишет терминал (обычно http://localhost:5173).
