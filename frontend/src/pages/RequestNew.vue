@@ -1,42 +1,75 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { items } from '../requestsStore.js'
+import { addItem } from '../ticketsStore.js'
 
 const router = useRouter()
 
-const newRequest = ref({
+// Состояние формы (atmId: null для корректной работы v-model.number)
+const form = ref({
   title: '',
   type: 'Scheduled',
   description: '',
-  dueDate: '',
-  atmId: ''
+  atmId: null
 })
 
-function onCreate() {
-  // Заглушка: на ЛР5 здесь будет POST /api/service-requests
-  console.log('Создать (заглушка):', newRequest.value)
+// Состояние ошибок
+const errors = ref({
+  title: '',
+  atmId: '',
+  description: ''
+})
 
-  items.value.push({
-    id: items.value.length + 1,
-    number: `SR-2026-${String(items.value.length + 1).padStart(3, '0')}`,
-    title: newRequest.value.title,
-    type: newRequest.value.type,
-    status: 'New',
-    dueDate: newRequest.value.dueDate,
-    atmId: Number(newRequest.value.atmId),
-    atmAddress: '— (уточнится на сервере)'
-  })
+function validate() {
+  // Сбрасываем старые ошибки
+  errors.value = { title: '', atmId: '', description: '' }
+  let isValid = true
 
-  newRequest.value = {
-    title: '',
-    type: 'Scheduled',
-    description: '',
-    dueDate: '',
-    atmId: ''
+  // 1. Проверка темы
+  const title = form.value.title.trim()
+  if (title.length < 5 || title.length > 80) {
+    errors.value.title = 'Тема: от 5 до 80 символов'
+    isValid = false
   }
 
-  // Перейти обратно к списку
+  // 2. Проверка банкомата (должно быть целое число > 0)
+  if (
+    form.value.atmId === null ||
+    form.value.atmId === '' ||
+    !Number.isInteger(form.value.atmId) ||
+    form.value.atmId <= 0
+  ) {
+    errors.value.atmId = 'Укажите целое число больше нуля'
+    isValid = false
+  }
+
+  // 3. Проверка описания
+  const description = form.value.description.trim()
+  if (description.length < 10 || description.length > 500) {
+    errors.value.description = 'Описание: от 10 до 500 символов'
+    isValid = false
+  }
+
+  return isValid
+}
+
+function onCreate() {
+  // Если проверка не пройдена — выходим, ничего не добавляя
+  if (!validate()) return
+
+  // Добавляем в общий store
+  addItem({
+    title: form.value.title.trim(),
+    atmId: form.value.atmId,
+    description: form.value.description.trim(),
+    type: form.value.type
+  })
+
+  // Очищаем форму и ошибки
+  form.value = { title: '', type: 'Scheduled', description: '', atmId: null }
+  errors.value = { title: '', atmId: '', description: '' }
+
+  // Переход на список
   router.push('/')
 }
 </script>
@@ -50,22 +83,20 @@ function onCreate() {
         <label for="title">Тема <span class="req">*</span></label>
         <input
           id="title"
-          v-model="newRequest.title"
+          v-model="form.title"
           name="title"
           type="text"
           autofocus
-          minlength="5"
-          maxlength="80"
           placeholder="Например: Плановое ТО"
-          required
         />
-        <small class="hint">5–80 символов</small>
+        <small v-if="errors.title" class="error">{{ errors.title }}</small>
+        <small v-else class="hint">5–80 символов</small>
       </div>
 
       <div class="row">
         <div class="field">
           <label for="type">Тип работ <span class="req">*</span></label>
-          <select id="type" v-model="newRequest.type" name="type" required>
+          <select id="type" v-model="form.type" name="type">
             <option value="Scheduled">Плановое ТО</option>
             <option value="Repair">Ремонт</option>
             <option value="CashCollection">Инкассация</option>
@@ -76,40 +107,28 @@ function onCreate() {
           <label for="atmId">Банкомат (номер записи) <span class="req">*</span></label>
           <input
             id="atmId"
-            v-model="newRequest.atmId"
+            v-model.number="form.atmId"
             name="atmId"
             type="number"
             min="1"
             placeholder="12"
-            required
           />
+          <small v-if="errors.atmId" class="error">{{ errors.atmId }}</small>
+          <small v-else class="hint">Целое число &gt; 0</small>
         </div>
-      </div>
-
-      <div class="field">
-        <label for="dueDate">Плановый срок <span class="req">*</span></label>
-        <input
-          id="dueDate"
-          v-model="newRequest.dueDate"
-          name="dueDate"
-          type="date"
-          required
-        />
       </div>
 
       <div class="field">
         <label for="description">Описание <span class="req">*</span></label>
         <textarea
           id="description"
-          v-model="newRequest.description"
+          v-model="form.description"
           name="description"
           rows="4"
-          minlength="10"
-          maxlength="500"
           placeholder="Опишите проблему или состав работ"
-          required
         ></textarea>
-        <small class="hint">10–500 символов</small>
+        <small v-if="errors.description" class="error">{{ errors.description }}</small>
+        <small v-else class="hint">10–500 символов</small>
       </div>
 
       <div class="actions">
@@ -162,14 +181,9 @@ h2 {
   font-size: 0.9rem;
 }
 
-.req {
-  color: #dc2626;
-}
-
-.hint {
-  color: var(--color-muted);
-  font-size: 0.78rem;
-}
+.req { color: #dc2626; }
+.hint { color: var(--color-muted); font-size: 0.78rem; }
+.error { color: #dc2626; font-size: 0.78rem; font-weight: 500; }
 
 .actions {
   display: flex;

@@ -1,5 +1,5 @@
 <script setup>
-import { items } from '../requestsStore.js'
+import { items } from '../ticketsStore.js'
 import RequestTable from '../components/RequestTable.vue'
 </script>
 

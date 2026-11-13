@@ -34,3 +34,24 @@ export const items = ref([
     atmAddress: 'г. Казань, ул. Баумана, 5'
   }
 ])
+
+// Учебный счётчик для новых id (в ЛР6 id будет приходить с сервера)
+let nextId = items.value.length + 1
+
+// Функция добавления новой заявки в общий массив
+export function addItem({ title, atmId, description, type }) {
+  const newItem = {
+    id: nextId,
+    number: `SR-2026-${String(nextId).padStart(3, '0')}`, // Формируем красивый номер
+    title,
+    type: type || 'Scheduled',
+    status: 'New', // По методичке статус всегда New
+    dueDate: '—',  // В ЛР5 срок в форме не вводим
+    atmId,
+    atmAddress: '— (уточнится позже)' // Заглушка для столбца таблицы
+  }
+
+  items.value.push(newItem)
+  nextId += 1
+  return newItem
+}
