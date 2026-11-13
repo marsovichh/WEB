@@ -1,11 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { addItem } from '../ticketsStore.js'
+import { createTicket } from '../api/tickets.js'
 
 const router = useRouter()
 
-// Состояние формы (atmId: null для корректной работы v-model.number)
 const form = ref({
   title: '',
   type: 'Scheduled',
@@ -13,70 +12,64 @@ const form = ref({
   atmId: null
 })
 
-// Состояние ошибок
-const errors = ref({
-  title: '',
-  atmId: '',
-  description: ''
-})
+const errors = ref({ title: '', atmId: '', description: '' })
+const globalError = ref('')
+const isSubmitting = ref(false)
 
 function validate() {
-  // Сбрасываем старые ошибки
   errors.value = { title: '', atmId: '', description: '' }
   let isValid = true
 
-  // 1. Проверка темы
-  const title = form.value.title.trim()
-  if (title.length < 5 || title.length > 80) {
+  if (form.value.title.trim().length < 5) {
     errors.value.title = 'Тема: от 5 до 80 символов'
     isValid = false
   }
-
-  // 2. Проверка банкомата (должно быть целое число > 0)
-  if (
-    form.value.atmId === null ||
-    form.value.atmId === '' ||
-    !Number.isInteger(form.value.atmId) ||
-    form.value.atmId <= 0
-  ) {
+  if (!Number.isInteger(form.value.atmId) || form.value.atmId <= 0) {
     errors.value.atmId = 'Укажите целое число больше нуля'
     isValid = false
   }
-
-  // 3. Проверка описания
-  const description = form.value.description.trim()
-  if (description.length < 10 || description.length > 500) {
+  if (form.value.description.trim().length < 10) {
     errors.value.description = 'Описание: от 10 до 500 символов'
     isValid = false
   }
-
   return isValid
 }
 
-function onCreate() {
-  // Если проверка не пройдена — выходим, ничего не добавляя
+async function onCreate() {
+  if (isSubmitting.value) return
   if (!validate()) return
 
-  // Добавляем в общий store
-  addItem({
-    title: form.value.title.trim(),
-    atmId: form.value.atmId,
-    description: form.value.description.trim(),
-    type: form.value.type
-  })
+  isSubmitting.value = true
+  globalError.value = ''
 
-  // Очищаем форму и ошибки
-  form.value = { title: '', type: 'Scheduled', description: '', atmId: null }
-  errors.value = { title: '', atmId: '', description: '' }
+  try {
+    await createTicket({
+      title: form.value.title.trim(),
+      atmId: form.value.atmId,
+      description: form.value.description.trim(),
+      type: form.value.type
+    })
 
-  // Переход на список
-  router.push('/')
+    // Если успешно — переходим на список
+    router.push('/')
+  } catch (error) {
+    // Показываем ошибку сервера (400, 500, network)
+    globalError.value = error.message
+  } finally {
+    // Снимаем блокировку кнопки в любом случае
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <template>
   <main class="page">
     <h2>Новая заявка на обслуживание</h2>
+
+    <!-- Блок для вывода ошибок от сервера -->
+    <div v-if="globalError" class="global-error">
+      {{ globalError }}
+    </div>
 
     <form class="card" @submit.prevent="onCreate">
       <div class="field">
@@ -90,7 +83,6 @@ function onCreate() {
           placeholder="Например: Плановое ТО"
         />
         <small v-if="errors.title" class="error">{{ errors.title }}</small>
-        <small v-else class="hint">5–80 символов</small>
       </div>
 
       <div class="row">
@@ -114,7 +106,6 @@ function onCreate() {
             placeholder="12"
           />
           <small v-if="errors.atmId" class="error">{{ errors.atmId }}</small>
-          <small v-else class="hint">Целое число &gt; 0</small>
         </div>
       </div>
 
@@ -128,12 +119,18 @@ function onCreate() {
           placeholder="Опишите проблему или состав работ"
         ></textarea>
         <small v-if="errors.description" class="error">{{ errors.description }}</small>
-        <small v-else class="hint">10–500 символов</small>
       </div>
 
       <div class="actions">
-        <button type="submit">Создать</button>
-        <button type="button" class="btn-secondary" @click="router.push('/')">
+        <button type="submit" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Создаём...' : 'Создать' }}
+        </button>
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          @click="router.push('/')" 
+          :disabled="isSubmitting"
+        >
           Отмена
         </button>
       </div>
@@ -146,6 +143,17 @@ h2 {
   font-size: 1.15rem;
   letter-spacing: -0.01em;
   margin: 0 0 0.9rem;
+}
+
+.global-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-width: 720px;
+  font-weight: 500;
+  border: 1px solid #fca5a5;
 }
 
 .card {
@@ -200,5 +208,10 @@ h2 {
 .btn-secondary:hover {
   background: #f3f4f6;
   box-shadow: none;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
