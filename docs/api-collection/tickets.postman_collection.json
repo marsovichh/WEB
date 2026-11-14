@@ -1,0 +1,63 @@
+{
+	"info": {
+		"name": "ATM Tickets API (ЛР8)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Ticket (201)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Замена картриджа\",\n  \"atmId\": 15,\n  \"description\": \"Требуется замена картриджа\"\n}"
+				},
+				"url": "http://localhost:5000/api/tickets"
+			}
+		},
+		{
+			"name": "Create Ticket - Bad Request (400)",
+			"request": {
+				"method": "POST",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"abc\",\n  \"atmId\": 0,\n  \"description\": \"short\"\n}"
+				},
+				"url": "http://localhost:5000/api/tickets"
+			}
+		},
+		{
+			"name": "Get Not Found (404)",
+			"request": {
+				"method": "GET",
+				"url": "http://localhost:5000/api/tickets/999999"
+			}
+		},
+		{
+			"name": "Conflict - No Assignee (409)",
+			"request": {
+				"method": "PATCH",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"status\": \"InProgress\"\n}"
+				},
+				"url": "http://localhost:5000/api/tickets/1/status"
+			}
+		},
+		{
+			"name": "Assign Assignee (200)",
+			"request": {
+				"method": "PATCH",
+				"header": [{"key": "Content-Type", "value": "application/json"}],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"assigneeUserId\": 42\n}"
+				},
+				"url": "http://localhost:5000/api/tickets/1/assignee"
+			}
+		}
+	]
+}
