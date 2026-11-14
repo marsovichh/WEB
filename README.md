@@ -14,3 +14,12 @@ npm run dev
 ```
 
 Открыть адрес, который напишет терминал (обычно http://localhost:5173).
+
+## Запуск Бэкенда (API)
+
+Нужен .NET 8 SDK.
+
+```bash
+cd backend
+dotnet restore
+dotnet run

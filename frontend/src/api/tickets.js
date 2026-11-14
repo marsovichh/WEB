@@ -1,7 +1,7 @@
 import { mockGetTickets, mockCreateTicket } from './mockTickets.js'
 
 // ПЕРЕКЛЮЧАТЕЛЬ: true = Mock (без сервера), false = реальный fetch
-const USE_MOCK = false
+const USE_MOCK = true
 
 // Учебный флаг для имитации 500 ошибки (для сдачи отчета)
 export const TEST_FORCE_500 = false
